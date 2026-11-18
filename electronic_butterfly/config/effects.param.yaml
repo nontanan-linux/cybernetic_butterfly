@@ -1,0 +1,56 @@
+# =============================================================================
+# LED Illumination & Sensor Parameters — Electronic Butterfly
+# =============================================================================
+
+effects:
+  # --- Addressable WS2812B Mini PCB Pixel Array ---
+  leds:
+    total_count: 8                  # Configurable between 6 and 10 pixels total
+    leds_per_wing: 4                # 4 pixels per wing embedded in rear wing sockets
+    pixel_type: "WS2812B Round Mini PCB (dia ~9-10mm) or cut from 5V Strip"
+    color_order: "GRB"
+    default_brightness: 180         # 0 - 255
+    target_fps: 60
+    default_palette: "bioluminescence"
+    data_pin: 4                     # GPIO 4 via 330Ω resistor
+
+  # --- Color Palettes & Lighting Shaders ---
+  palettes:
+    bioluminescence:
+      name: "Bioluminescent Depths"
+      base_color_rgb: [0, 160, 180]    # Aquatic cyan
+      peak_color_rgb: [16, 255, 120]   # Emerald green
+      wave_speed_divisor: 7
+      vein_phase_step: 45
+
+    morpho_blue:
+      name: "Morpho Iridescence"
+      base_color_rgb: [0, 70, 255]     # Deep cobalt
+      highlight_color_rgb: [180, 50, 255] # Structural violet
+      stroke_boost_multiplier: 90.0    # Intensifies as wings rise to upstroke
+
+    monarch_fire:
+      name: "Monarch Amber Flame"
+      flame_base_rgb: [255, 60, 0]     # Warm ember
+      flame_peak_rgb: [255, 190, 0]    # Golden amber
+      margin_star_indices: [3]         # Wing apex spot index
+
+    cyber_aurora:
+      name: "Cyber Aurora"
+      saturation: 220
+      value: 230
+      sweep_speed_ms: 15
+
+    touch_surge:
+      name: "Touch Wave Pulse"
+      duration_ms: 1200
+      pulse_speed_ms: 75
+      shockwave_color_rgb: [0, 220, 255]
+      core_flash_rgb: [255, 255, 255]
+
+sensors:
+  # --- Button & Control Signals ---
+  boot_button:
+    pin: 9
+    debounce_ms: 50
+    active_level: "LOW"

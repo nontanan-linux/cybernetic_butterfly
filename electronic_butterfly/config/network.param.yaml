@@ -1,0 +1,59 @@
+# =============================================================================
+# Network & Communications Configuration — Electronic Butterfly
+# =============================================================================
+
+network:
+  # --- SoftAP Mode (ESP32 Standalone Access Point) ---
+  access_point:
+    enabled: true
+    ssid: "CyberButterfly-ESP32"
+    password: "cyberbutterfly"      # Min 8 characters
+    channel: 1
+    max_clients: 4
+    hidden: false
+    ip_address: "192.168.4.1"       # Default gateway IP for SoftAP
+    gateway: "192.168.4.1"
+    subnet: "255.255.255.0"
+
+  # --- Station Mode (Connecting to local Wi-Fi router / lab network) ---
+  station:
+    enabled: false                  # Set true to join an existing Wi-Fi network
+    ssid: "Home_WiFi"
+    password: "wifi_password"
+    use_static_ip: false
+    static_ip: "192.168.1.150"
+    gateway: "192.168.1.1"
+    subnet: "255.255.255.0"
+    dns: "8.8.8.8"
+    reconnect_interval_ms: 5000
+
+  # --- Web Server & REST API Endpoints ---
+  server:
+    host: "0.0.0.0"                 # Listen on all network interfaces
+    http_port: 80                   # Standard HTTP port on ESP32
+    dev_port: 8050                  # Development/simulator server port (default 8050)
+    cors_enabled: true
+    cors_origin: "*"
+    request_timeout_ms: 3000
+
+  # --- mDNS Zero-Config Discovery ---
+  mdns:
+    enabled: true
+    hostname: "butterfly"           # Resolves to http://butterfly.local
+    service_type: "_http"
+    protocol: "_tcp"
+
+  # --- WebSocket Real-Time Telemetry Stream ---
+  websocket:
+    enabled: true
+    path: "/ws"
+    telemetry_rate_hz: 20           # Broadcast live angle & sensor data 20 times/sec
+
+  # --- Serial Communication (USB-CDC) ---
+  serial:
+    baud_rate: 115200
+    rx_buffer_size: 256
+    device_patterns:
+      - "/dev/ttyACM*"
+      - "/dev/ttyUSB*"
+      - "COM*"

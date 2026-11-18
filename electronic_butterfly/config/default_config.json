@@ -1,0 +1,278 @@
+{
+  "network": {
+    "access_point": {
+      "enabled": true,
+      "ssid": "CyberButterfly-ESP32",
+      "password": "cyberbutterfly",
+      "channel": 1,
+      "max_clients": 4,
+      "hidden": false,
+      "ip_address": "192.168.4.1",
+      "gateway": "192.168.4.1",
+      "subnet": "255.255.255.0"
+    },
+    "station": {
+      "enabled": false,
+      "ssid": "Home_WiFi",
+      "password": "wifi_password",
+      "use_static_ip": false,
+      "static_ip": "192.168.1.150",
+      "gateway": "192.168.1.1",
+      "subnet": "255.255.255.0",
+      "dns": "8.8.8.8",
+      "reconnect_interval_ms": 5000
+    },
+    "server": {
+      "host": "0.0.0.0",
+      "http_port": 80,
+      "dev_port": 8050,
+      "cors_enabled": true,
+      "cors_origin": "*",
+      "request_timeout_ms": 3000
+    },
+    "mdns": {
+      "enabled": true,
+      "hostname": "butterfly",
+      "service_type": "_http",
+      "protocol": "_tcp"
+    },
+    "websocket": {
+      "enabled": true,
+      "path": "/ws",
+      "telemetry_rate_hz": 20
+    },
+    "serial": {
+      "baud_rate": 115200,
+      "rx_buffer_size": 256,
+      "device_patterns": [
+        "/dev/ttyACM*",
+        "/dev/ttyUSB*",
+        "COM*"
+      ]
+    }
+  },
+  "hardware": {
+    "mcu": {
+      "model": "ESP32-C3 SuperMini",
+      "core": "RISC-V 32-bit single-core",
+      "cpu_freq_mhz": 160,
+      "flash_size_mb": 4,
+      "sram_kb": 400,
+      "supply_voltage": 3.3,
+      "placement": "Abdomen open skeleton / capsule"
+    },
+    "pins": {
+      "servo_left": 2,
+      "servo_right": 3,
+      "ws2812b_data": 4,
+      "button_boot": 9
+    },
+    "servos": {
+      "model": "TowerPro MG90S (180\u00b0 Metal Gear)",
+      "torque_kg_cm": 2.2,
+      "pwm_frequency_hz": 50,
+      "min_pulse_us": 500,
+      "max_pulse_us": 2500,
+      "period_us": 20000,
+      "mounting": "Direct-Drive (Servo horn embedded in wing root + support hinge)",
+      "left_servo": {
+        "pin": 2,
+        "inverted": false,
+        "trim_offset_deg": 0.0
+      },
+      "right_servo": {
+        "pin": 3,
+        "inverted": true,
+        "trim_offset_deg": 0.0
+      }
+    },
+    "power": {
+      "architecture": "Separated Power Core (Base Stand) & Controller (Abdomen)",
+      "umbilical_wires": 2,
+      "base_stand": {
+        "battery": {
+          "model": "14500 Li-ion 3.7V (AA size, Button Top with Protection Circuit)",
+          "nominal_voltage_v": 3.7,
+          "capacity_mah": 800,
+          "holder": "Single AA battery holder with polarity label"
+        },
+        "charger": {
+          "model": "TP4056 USB-C Module with Dual Protection IC (B+/B-, OUT+/OUT-)",
+          "charge_current_ma": 1000
+        },
+        "boost_converter": {
+          "model": "Miniature 5V Step-Up Boost Module (~11x16mm)",
+          "output_voltage_v": 5.0,
+          "max_output_current_ma": 1200
+        },
+        "switch": {
+          "model": "SPDT Micro Slide Switch (cuts battery power)"
+        },
+        "ballast": "Internal ballast cavity for coins / lead sinkers to prevent tipping"
+      },
+      "body": {
+        "protection_diode": {
+          "model": "1N5819 Schottky Diode",
+          "purpose": "Prevents 5V power collision when PC USB-C is plugged directly into ESP32-C3"
+        },
+        "bulk_capacitor": {
+          "model": "Electrolytic 470\u00b5F - 1000\u00b5F (10V/16V)",
+          "purpose": "Absorbs servo transient spikes during rapid direction reversals, preventing MCU brownout"
+        },
+        "damping_resistors": {
+          "model": "330\u03a9 Resistors (2x)",
+          "purpose": "In-line data protection for left and right wing LED pixels"
+        },
+        "wing_interconnect": {
+          "model": "0.2mm Enamelled Copper Wire (Litz/Magnet Wire)",
+          "coiling": "Coiled into 2-3 spring loops at the wing hinge to prevent mechanical binding"
+        }
+      }
+    }
+  },
+  "kinematics": {
+    "limits": {
+      "min_safe_angle_deg": 15.0,
+      "max_safe_angle_deg": 85.0,
+      "rest_angle_deg": 75.0,
+      "horizontal_angle_deg": 20.0
+    },
+    "harmonics": {
+      "secondary_harmonic_ratio": 0.22,
+      "secondary_harmonic_phase_rad": 0.35,
+      "bilateral_phase_offset_rad": 0.0
+    },
+    "modes": {
+      "sleep": {
+        "name": "Sleep / Slumber",
+        "frequency_hz": 0.0,
+        "amplitude_deg": 0.0,
+        "center_angle_deg": 80.0,
+        "description": "Wings folded upright, servos unpowered or holding minimal torque"
+      },
+      "breathing": {
+        "name": "Organic Respiration",
+        "frequency_hz": 0.4,
+        "amplitude_deg": 8.0,
+        "center_angle_deg": 60.0,
+        "description": "Subtle biological chest breathing movement"
+      },
+      "flutter": {
+        "name": "Gentle Flutter",
+        "frequency_hz": 1.2,
+        "amplitude_deg": 25.0,
+        "center_angle_deg": 45.0,
+        "description": "Leisurely garden fluttering with smooth sine waves"
+      },
+      "active_flight": {
+        "name": "Dynamic Flight",
+        "frequency_hz": 2.2,
+        "amplitude_deg": 30.0,
+        "center_angle_deg": 45.0,
+        "description": "Energetic flight mode with prominent harmonic wing flick"
+      },
+      "startled_burst": {
+        "name": "Startled Burst",
+        "frequency_hz": 3.5,
+        "amplitude_deg": 32.0,
+        "center_angle_deg": 45.0,
+        "duration_ms": 2500,
+        "description": "High-frequency escape flutter triggered by antenna touch"
+      },
+      "glide": {
+        "name": "Gliding / Basking",
+        "frequency_hz": 0.2,
+        "amplitude_deg": 3.0,
+        "center_angle_deg": 20.0,
+        "description": "Wings held flat horizontally with gentle atmospheric drift"
+      }
+    }
+  },
+  "effects": {
+    "leds": {
+      "total_count": 8,
+      "leds_per_wing": 4,
+      "pixel_type": "WS2812B Round Mini PCB (dia ~9-10mm) or cut from 5V Strip",
+      "color_order": "GRB",
+      "default_brightness": 180,
+      "target_fps": 60,
+      "default_palette": "bioluminescence",
+      "data_pin": 4
+    },
+    "palettes": {
+      "bioluminescence": {
+        "name": "Bioluminescent Depths",
+        "base_color_rgb": [
+          0,
+          160,
+          180
+        ],
+        "peak_color_rgb": [
+          16,
+          255,
+          120
+        ],
+        "wave_speed_divisor": 7,
+        "vein_phase_step": 45
+      },
+      "morpho_blue": {
+        "name": "Morpho Iridescence",
+        "base_color_rgb": [
+          0,
+          70,
+          255
+        ],
+        "highlight_color_rgb": [
+          180,
+          50,
+          255
+        ],
+        "stroke_boost_multiplier": 90.0
+      },
+      "monarch_fire": {
+        "name": "Monarch Amber Flame",
+        "flame_base_rgb": [
+          255,
+          60,
+          0
+        ],
+        "flame_peak_rgb": [
+          255,
+          190,
+          0
+        ],
+        "margin_star_indices": [
+          3
+        ]
+      },
+      "cyber_aurora": {
+        "name": "Cyber Aurora",
+        "saturation": 220,
+        "value": 230,
+        "sweep_speed_ms": 15
+      },
+      "touch_surge": {
+        "name": "Touch Wave Pulse",
+        "duration_ms": 1200,
+        "pulse_speed_ms": 75,
+        "shockwave_color_rgb": [
+          0,
+          220,
+          255
+        ],
+        "core_flash_rgb": [
+          255,
+          255,
+          255
+        ]
+      }
+    }
+  },
+  "sensors": {
+    "boot_button": {
+      "pin": 9,
+      "debounce_ms": 50,
+      "active_level": "LOW"
+    }
+  }
+}

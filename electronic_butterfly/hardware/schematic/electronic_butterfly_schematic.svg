@@ -1,0 +1,280 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 850" width="100%" height="100%">
+  <defs>
+    <style>
+      .bg { fill: #0b0f19; }
+      .grid { stroke: #1e293b; stroke-width: 1; }
+      .title { fill: #64ffda; font-family: -apple-system, system-ui, sans-serif; font-size: 22px; font-weight: bold; }
+      .subtitle { fill: #94a3b8; font-family: -apple-system, system-ui, sans-serif; font-size: 13px; }
+      .zone-box { fill: #111827; stroke: #334155; stroke-width: 2; rx: 12; }
+      .zone-header { font-family: -apple-system, system-ui, sans-serif; font-size: 15px; font-weight: bold; }
+      .card-mcu { fill: #1e1b4b; stroke: #6366f1; stroke-width: 2; rx: 8; }
+      .card-servo { fill: #291805; stroke: #f59e0b; stroke-width: 2; rx: 8; }
+      .card-pwr { fill: #2e1022; stroke: #ec4899; stroke-width: 2; rx: 8; }
+      .card-wing { fill: #062c21; stroke: #10b981; stroke-width: 2; rx: 8; }
+      .card-component { fill: #1e293b; stroke: #475569; stroke-width: 1.5; rx: 6; }
+      .lbl-title { fill: #f8fafc; font-family: -apple-system, system-ui, sans-serif; font-size: 13px; font-weight: bold; }
+      .lbl-sub { fill: #94a3b8; font-family: monospace; font-size: 11px; }
+      .wire-5v { stroke: #ef4444; stroke-width: 3; fill: none; }
+      .wire-gnd { stroke: #64748b; stroke-width: 3; fill: none; }
+      .wire-pwm { stroke: #f59e0b; stroke-width: 2.5; fill: none; }
+      .wire-data { stroke: #10b981; stroke-width: 2.5; fill: none; }
+      .wire-spring { stroke: #d97706; stroke-width: 2; fill: none; stroke-dasharray: 4,2; }
+      .dot-node { fill: #38bdf8; }
+      .callout { fill: #0284c7; font-family: monospace; font-size: 10px; font-weight: bold; }
+    </style>
+    <pattern id="grid-dots" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="10" cy="10" r="0.8" fill="#1e293b" />
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="850" class="bg" />
+  <rect width="1200" height="850" fill="url(#grid-dots)" />
+
+  <!-- Outer Border -->
+  <rect x="20" y="20" width="1160" height="810" fill="none" stroke="#1e293b" stroke-width="2" rx="8" />
+
+  <!-- Title Header -->
+  <g transform="translate(50, 60)">
+    <text class="title">CYBERNETIC BUTTERFLY — TWO-ZONE CIRCUIT & PCB ARCHITECTURE</text>
+    <text y="24" class="subtitle">Separated Power Core (Base Stand) &amp; Main Controller (Abdomen) | Direct-Drive MG90S Servos | Only 2 Wires Through Stem</text>
+  </g>
+
+  <!-- ========================================================================= -->
+  <!-- ZONE 1: BASE STAND (POWER CORE)                                           -->
+  <!-- ========================================================================= -->
+  <g transform="translate(50, 110)">
+    <rect width="1100" height="210" class="zone-box" stroke="#ec4899" />
+    <text x="25" y="32" class="zone-header" fill="#f472b6">[ โซนฐานตั้ง: POWER CORE BASE STAND ] — แหล่งจ่ายพลังงานอิสระ ซ่อนในฐานล่าง</text>
+    
+    <!-- USB-C Port -->
+    <g transform="translate(30, 60)">
+      <rect width="110" height="60" class="card-component" stroke="#ec4899" />
+      <text x="55" y="28" text-anchor="middle" class="lbl-title">พอร์ต USB-C</text>
+      <text x="55" y="44" text-anchor="middle" class="lbl-sub">5V In (ชาร์จไฟ)</text>
+    </g>
+
+    <!-- TP4056 Charger -->
+    <g transform="translate(190, 50)">
+      <rect width="180" height="135" class="card-pwr" />
+      <text x="90" y="26" text-anchor="middle" class="lbl-title" fill="#f472b6">โมดูลชาร์จ TP4056</text>
+      <text x="90" y="42" text-anchor="middle" class="lbl-sub">มี IC ป้องกันแบตในตัว</text>
+      
+      <circle cx="20" cy="65" r="4" fill="#ec4899" />
+      <text x="32" y="69" class="lbl-sub">IN+ (5V)</text>
+      <circle cx="20" cy="95" r="4" fill="#64748b" />
+      <text x="32" y="99" class="lbl-sub">IN- (GND)</text>
+
+      <circle cx="160" cy="65" r="4" fill="#ef4444" />
+      <text x="148" y="69" text-anchor="end" class="lbl-sub">OUT+ / B+</text>
+      <circle cx="160" cy="95" r="4" fill="#64748b" />
+      <text x="148" y="99" text-anchor="end" class="lbl-sub">OUT- / B-</text>
+    </g>
+
+    <!-- 14500 Li-ion Battery -->
+    <g transform="translate(420, 50)">
+      <rect width="190" height="75" class="card-pwr" stroke="#f43f5e" />
+      <text x="95" y="28" text-anchor="middle" class="lbl-title" fill="#fda4af">แบตเตอรี่ Li-ion 14500</text>
+      <text x="95" y="44" text-anchor="middle" class="lbl-sub">3.7V หัวนูน (Button Top)</text>
+      <text x="95" y="60" text-anchor="middle" class="callout" fill="#fb7185">มีวงจรป้องกัน (Protected)</text>
+    </g>
+
+    <!-- Slide Switch -->
+    <g transform="translate(660, 60)">
+      <rect width="120" height="60" class="card-component" stroke="#e2e8f0" />
+      <text x="60" y="28" text-anchor="middle" class="lbl-title">สวิตช์เปิด-ปิด</text>
+      <text x="60" y="44" text-anchor="middle" class="lbl-sub">SPDT Slide Switch</text>
+    </g>
+
+    <!-- Step-Up Boost 5V -->
+    <g transform="translate(830, 50)">
+      <rect width="160" height="90" class="card-pwr" stroke="#38bdf8" />
+      <text x="80" y="26" text-anchor="middle" class="lbl-title" fill="#38bdf8">โมดูล Step-Up Boost</text>
+      <text x="80" y="42" text-anchor="middle" class="lbl-sub">แปลง 3.7V ──► 5V DC</text>
+      <text x="80" y="60" text-anchor="middle" class="lbl-sub">ขนาดจิ๋ว 11 × 16 มม.</text>
+      <circle cx="160" cy="35" r="5" fill="#ef4444" />
+      <circle cx="160" cy="65" r="5" fill="#64748b" />
+      <text x="150" y="38" text-anchor="end" class="callout" fill="#ef4444">5V Out</text>
+      <text x="150" y="68" text-anchor="end" class="callout" fill="#64748b">GND Out</text>
+    </g>
+
+    <!-- Connections in Zone 1 -->
+    <path d="M 140,90 L 190,90" class="wire-5v" />
+    <path d="M 370,80 L 420,80" class="wire-5v" />
+    <path d="M 370,110 L 420,110" class="wire-gnd" />
+    <path d="M 610,80 L 660,80" class="wire-5v" />
+    <path d="M 780,80 L 830,80" class="wire-5v" />
+  </g>
+
+  <!-- ========================================================================= -->
+  <!-- 2-WIRE STEM CONDUIT (5V & GND)                                            -->
+  <!-- ========================================================================= -->
+  <g transform="translate(1040, 235)">
+    <!-- Red 5V Wire -->
+    <path d="M -50, -50 L 20, -50 L 20, 160 L -120, 160" class="wire-5v" />
+    <!-- Black GND Wire -->
+    <path d="M -50, -20 L 5, -20 L 5, 185 L -120, 185" class="wire-gnd" />
+    
+    <rect x="-80" y="30" width="130" height="50" rx="6" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5" />
+    <text x="-15" y="50" text-anchor="middle" class="lbl-title" font-size="11" fill="#38bdf8">ก้านเชื่อมต่อลำตัว</text>
+    <text x="-15" y="66" text-anchor="middle" class="lbl-sub" font-size="10" fill="#f8fafc">สายไฟเพียง 2 เส้น (5V, GND)</text>
+  </g>
+
+  <!-- ========================================================================= -->
+  <!-- ZONE 2: BUTTERFLY BODY (MAIN PCB & ACTUATORS)                             -->
+  <!-- ========================================================================= -->
+  <g transform="translate(50, 360)">
+    <rect width="1100" height="450" class="zone-box" stroke="#6366f1" />
+    <text x="25" y="32" class="zone-header" fill="#818cf8">[ โซนลำตัวผีเสื้อ: MAIN PCB &amp; ACTUATORS ] — ติดตั้งในส่วนอกและส่วนท้องโปร่ง</text>
+
+    <!-- Power Protection: Schottky Diode & 470uF Cap -->
+    <g transform="translate(680, 50)">
+      <rect width="210" height="120" class="card-component" stroke="#e2e8f0" />
+      <text x="105" y="24" text-anchor="middle" class="lbl-title">การป้องกันระบบไฟ (Protection)</text>
+      
+      <!-- Schottky Diode -->
+      <rect x="20" y="40" width="170" height="30" rx="4" fill="#0f172a" stroke="#f59e0b" />
+      <text x="105" y="58" text-anchor="middle" class="lbl-sub" fill="#fbbf24">Schottky Diode (1N5819)</text>
+      <text x="105" y="69" text-anchor="middle" class="callout" font-size="8">กันไฟ 5V ย้อนเวลามีการเสียบ USB เข้า PC</text>
+
+      <!-- 470uF Cap -->
+      <circle cx="35" cy="95" r="14" fill="#1e293b" stroke="#ef4444" stroke-width="2" />
+      <text x="35" y="99" text-anchor="middle" class="lbl-sub" font-size="9">470µF</text>
+      <text x="60" y="94" class="lbl-sub">Capacitor 470µF – 1000µF</text>
+      <text x="60" y="106" class="callout" font-size="8">ซับไฟกระชาก Servo กัน MCU รีเซ็ต</text>
+    </g>
+
+    <!-- Master MCU: ESP32-C3 SuperMini -->
+    <g transform="translate(370, 50)">
+      <rect width="260" height="340" class="card-mcu" />
+      <text x="130" y="30" text-anchor="middle" class="lbl-title" fill="#a5b4fc">ESP32-C3 SuperMini</text>
+      <text x="130" y="48" text-anchor="middle" class="lbl-sub">(ในส่วนท้องโปร่ง Skeleton)</text>
+
+      <!-- Pinout Indicators -->
+      <g transform="translate(20, 75)">
+        <!-- 5V Input -->
+        <circle cx="0" cy="20" r="4" fill="#ef4444" />
+        <text x="12" y="24" class="lbl-sub" fill="#ef4444">5V (ผ่าน 1N5819)</text>
+        <!-- GND -->
+        <circle cx="0" cy="50" r="4" fill="#64748b" />
+        <text x="12" y="54" class="lbl-sub">GND</text>
+        <!-- 3V3 Out -->
+        <circle cx="0" cy="80" r="4" fill="#f97316" />
+        <text x="12" y="84" class="lbl-sub" fill="#f97316">3V3 (Internal LDO)</text>
+
+        <!-- GPIO 2 -->
+        <circle cx="220" cy="20" r="5" fill="#f59e0b" />
+        <text x="210" y="24" text-anchor="end" class="lbl-title" fill="#fbbf24">GPIO 2 (Left Servo PWM)</text>
+        <!-- GPIO 3 -->
+        <circle cx="220" cy="65" r="5" fill="#f59e0b" />
+        <text x="210" y="69" text-anchor="end" class="lbl-title" fill="#fbbf24">GPIO 3 (Right Servo PWM)</text>
+        <text x="210" y="82" text-anchor="end" class="callout" font-size="8">มุมกลับด้าน 180 - Left</text>
+        <!-- GPIO 4 -->
+        <circle cx="220" cy="115" r="5" fill="#10b981" />
+        <text x="210" y="119" text-anchor="end" class="lbl-title" fill="#34d399">GPIO 4 (WS2812B Data)</text>
+        <text x="210" y="132" text-anchor="end" class="callout" font-size="8">ผ่านตัวต้านทาน 330Ω</text>
+
+        <!-- GPIO 9 -->
+        <circle cx="0" cy="140" r="4" fill="#6366f1" />
+        <text x="12" y="144" class="lbl-sub">GPIO 9 (Boot Button)</text>
+      </g>
+
+      <!-- Status LED Viewing Note -->
+      <rect x="25" y="260" width="210" height="60" rx="4" fill="#172554" stroke="#38bdf8" />
+      <text x="130" y="280" text-anchor="middle" class="lbl-title" font-size="11" fill="#38bdf8">โครงโปร่งแคปซูลส่วนท้อง</text>
+      <text x="130" y="296" text-anchor="middle" class="lbl-sub" font-size="9">มองเห็นแสงไฟสถานะ Power/Wi-Fi</text>
+      <text x="130" y="308" text-anchor="middle" class="lbl-sub" font-size="9">และความสวยงามของวงจรด้านใน</text>
+    </g>
+
+    <!-- Actuators: 2x MG90S Micro Servos (Direct Drive) -->
+    <!-- Left Servo -->
+    <g transform="translate(40, 60)">
+      <rect width="270" height="150" class="card-servo" />
+      <text x="135" y="28" text-anchor="middle" class="lbl-title" fill="#fbbf24">LEFT SERVO (MG90S เฟืองโลหะ)</text>
+      <text x="135" y="44" text-anchor="middle" class="lbl-sub">แกนหมุนหันออกซ้าย (Direct Drive)</text>
+      
+      <circle cx="20" cy="70" r="4" fill="#f59e0b" />
+      <text x="32" y="74" class="lbl-sub" fill="#fbbf24">PWM Signal (จาก GPIO 2)</text>
+      <circle cx="20" cy="95" r="4" fill="#ef4444" />
+      <text x="32" y="99" class="lbl-sub">5V Power (ต่อคร่อม 470µF)</text>
+      <circle cx="20" cy="120" r="4" fill="#64748b" />
+      <text x="32" y="124" class="lbl-sub">GND</text>
+      
+      <rect x="180" y="65" width="75" height="65" rx="4" fill="#1c1917" stroke="#f59e0b" />
+      <text x="217" y="90" text-anchor="middle" class="callout" font-size="9">Support</text>
+      <text x="217" y="104" text-anchor="middle" class="callout" font-size="9">Hinge ประคอง</text>
+    </g>
+
+    <!-- Right Servo -->
+    <g transform="translate(40, 240)">
+      <rect width="270" height="150" class="card-servo" />
+      <text x="135" y="28" text-anchor="middle" class="lbl-title" fill="#fbbf24">RIGHT SERVO (MG90S เฟืองโลหะ)</text>
+      <text x="135" y="44" text-anchor="middle" class="lbl-sub">แกนหมุนหันออกขวา (Direct Drive)</text>
+      
+      <circle cx="20" cy="70" r="4" fill="#f59e0b" />
+      <text x="32" y="74" class="lbl-sub" fill="#fbbf24">PWM Signal (จาก GPIO 3)</text>
+      <circle cx="20" cy="95" r="4" fill="#ef4444" />
+      <text x="32" y="99" class="lbl-sub">5V Power (ต่อคร่อม 470µF)</text>
+      <circle cx="20" cy="120" r="4" fill="#64748b" />
+      <text x="32" y="124" class="lbl-sub">GND</text>
+
+      <rect x="180" y="65" width="75" height="65" rx="4" fill="#1c1917" stroke="#f59e0b" />
+      <text x="217" y="90" text-anchor="middle" class="callout" font-size="9">Support</text>
+      <text x="217" y="104" text-anchor="middle" class="callout" font-size="9">Hinge ประคอง</text>
+    </g>
+
+    <!-- Wings: Left & Right Wings with 330 ohm resistors & coiled enamel wires -->
+    <!-- Left Wing -->
+    <g transform="translate(680, 200)">
+      <rect width="190" height="200" class="card-wing" />
+      <text x="95" y="24" text-anchor="middle" class="lbl-title" fill="#6ee7b7">LEFT WING (ปีกซ้าย)</text>
+      <text x="95" y="38" text-anchor="middle" class="lbl-sub">หนา 1.8 มม. ร่องสายไฟ 0.8 มม.</text>
+      
+      <!-- Resistor 330 ohm -->
+      <rect x="20" y="55" width="60" height="20" fill="#1e293b" stroke="#e2e8f0" rx="3" />
+      <text x="50" y="69" text-anchor="middle" class="lbl-sub" font-size="10">R 330Ω</text>
+
+      <!-- Coiled Enamel Wire Callout -->
+      <path d="M 85,65 Q 95,55 105,65 Q 115,75 125,65" class="wire-spring" />
+      <text x="110" y="95" text-anchor="middle" class="callout" font-size="8">ขดลวดทองแดง 0.2mm</text>
+      <text x="110" y="106" text-anchor="middle" class="callout" font-size="8">เป็นสปริง 2-3 รอบผ่านบานพับ</text>
+
+      <!-- 4x WS2812B Pixel symbols -->
+      <circle cx="45" cy="135" r="9" fill="#10b981" stroke="#34d399" stroke-width="2" />
+      <circle cx="85" cy="145" r="9" fill="#10b981" stroke="#34d399" stroke-width="2" />
+      <circle cx="125" cy="135" r="9" fill="#10b981" stroke="#34d399" stroke-width="2" />
+      <circle cx="165" cy="145" r="9" fill="#10b981" stroke="#34d399" stroke-width="2" />
+      <text x="95" y="175" text-anchor="middle" class="lbl-sub" font-size="10">WS2812B Mini PCB 4 ดวง</text>
+    </g>
+
+    <!-- Right Wing (Mirrored) -->
+    <g transform="translate(890, 200)">
+      <rect width="190" height="200" class="card-wing" />
+      <text x="95" y="24" text-anchor="middle" class="lbl-title" fill="#6ee7b7">RIGHT WING (ปีกขวา)</text>
+      <text x="95" y="38" text-anchor="middle" class="lbl-sub">Mirror จากปีกซ้าย 100%</text>
+
+      <rect x="20" y="55" width="60" height="20" fill="#1e293b" stroke="#e2e8f0" rx="3" />
+      <text x="50" y="69" text-anchor="middle" class="lbl-sub" font-size="10">R 330Ω</text>
+
+      <path d="M 85,65 Q 95,55 105,65 Q 115,75 125,65" class="wire-spring" />
+      <text x="110" y="95" text-anchor="middle" class="callout" font-size="8">ขดลวดทองแดง 0.2mm</text>
+      <text x="110" y="106" text-anchor="middle" class="callout" font-size="8">เป็นสปริง 2-3 รอบผ่านบานพับ</text>
+
+      <circle cx="45" cy="135" r="9" fill="#10b981" stroke="#34d399" stroke-width="2" />
+      <circle cx="85" cy="145" r="9" fill="#10b981" stroke="#34d399" stroke-width="2" />
+      <circle cx="125" cy="135" r="9" fill="#10b981" stroke="#34d399" stroke-width="2" />
+      <circle cx="165" cy="145" r="9" fill="#10b981" stroke="#34d399" stroke-width="2" />
+      <text x="95" y="175" text-anchor="middle" class="lbl-sub" font-size="10">WS2812B Mini PCB 4 ดวง</text>
+    </g>
+
+    <!-- Wiring Connections in Zone 2 -->
+    <!-- PWM Left: GPIO 2 to Left Servo -->
+    <path d="M 370, 95 L 310, 95 L 310, 130" class="wire-pwm" />
+    <!-- PWM Right: GPIO 3 to Right Servo -->
+    <path d="M 370, 140 L 330, 140 L 330, 310 L 310, 310" class="wire-pwm" />
+
+    <!-- Data: GPIO 4 to Wings via 330 ohm -->
+    <path d="M 630, 190 L 680, 190 L 680, 265 L 700, 265" class="wire-data" />
+    <path d="M 680, 265 L 870, 265 L 870, 265 L 910, 265" class="wire-data" />
+  </g>
+</svg>

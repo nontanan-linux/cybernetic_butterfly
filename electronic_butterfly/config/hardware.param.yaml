@@ -1,0 +1,77 @@
+# =============================================================================
+# Hardware & Physical Pin Configuration — Electronic Butterfly
+# =============================================================================
+
+hardware:
+  # --- Target Microcontroller Profile ---
+  mcu:
+    model: "ESP32-C3 SuperMini"
+    core: "RISC-V 32-bit single-core"
+    cpu_freq_mhz: 160
+    flash_size_mb: 4
+    sram_kb: 400
+    supply_voltage: 3.3
+    placement: "Abdomen open skeleton / capsule"
+
+  # --- Physical Pin Allocation (User Specification) ---
+  pins:
+    servo_left: 2                   # Left Wing Servo PWM (GPIO 2)
+    servo_right: 3                  # Right Wing Servo PWM (GPIO 3, Angle = 180 - Left)
+    ws2812b_data: 4                 # SMD / WS2812B Pixel Data Out via 330Ω resistor (GPIO 4)
+    button_boot: 9                  # Onboard Boot button (mode cycle)
+
+  # --- Actuators: Direct-Drive Metal Gear Micro Servos ---
+  servos:
+    model: "TowerPro MG90S (180° Metal Gear)"
+    torque_kg_cm: 2.2
+    pwm_frequency_hz: 50            # Standard 50 Hz PWM
+    min_pulse_us: 500               # 0 degrees
+    max_pulse_us: 2500              # 180 degrees
+    period_us: 20000                # 20ms frame
+    mounting: "Direct-Drive (Servo horn embedded in wing root + support hinge)"
+    left_servo:
+      pin: 2
+      inverted: false
+      trim_offset_deg: 0.0
+    right_servo:
+      pin: 3
+      inverted: true                # Formula: 180 - left_angle
+      trim_offset_deg: 0.0
+
+  # --- Power Architecture (Two-Zone Topology) ---
+  power:
+    architecture: "Separated Power Core (Base Stand) & Controller (Abdomen)"
+    umbilical_wires: 2              # Exactly 2 wires running up stem: 5V and GND
+    
+    # Zone 1: Base Stand (Power Core)
+    base_stand:
+      battery:
+        model: "14500 Li-ion 3.7V (AA size, Button Top with Protection Circuit)"
+        nominal_voltage_v: 3.7
+        capacity_mah: 800
+        holder: "Single AA battery holder with polarity label"
+      charger:
+        model: "TP4056 USB-C Module with Dual Protection IC (B+/B-, OUT+/OUT-)"
+        charge_current_ma: 1000
+      boost_converter:
+        model: "Miniature 5V Step-Up Boost Module (~11x16mm)"
+        output_voltage_v: 5.0
+        max_output_current_ma: 1200
+      switch:
+        model: "SPDT Micro Slide Switch (cuts battery power)"
+      ballast: "Internal ballast cavity for coins / lead sinkers to prevent tipping"
+
+    # Zone 2: Butterfly Body (Main PCB & Actuators)
+    body:
+      protection_diode:
+        model: "1N5819 Schottky Diode"
+        purpose: "Prevents 5V power collision when PC USB-C is plugged directly into ESP32-C3"
+      bulk_capacitor:
+        model: "Electrolytic 470µF - 1000µF (10V/16V)"
+        purpose: "Absorbs servo transient spikes during rapid direction reversals, preventing MCU brownout"
+      damping_resistors:
+        model: "330Ω Resistors (2x)"
+        purpose: "In-line data protection for left and right wing LED pixels"
+      wing_interconnect:
+        model: "0.2mm Enamelled Copper Wire (Litz/Magnet Wire)"
+        coiling: "Coiled into 2-3 spring loops at the wing hinge to prevent mechanical binding"

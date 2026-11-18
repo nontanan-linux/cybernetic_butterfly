@@ -1,0 +1,63 @@
+# =============================================================================
+# Biomimetic Wing Kinematics Configuration — Electronic Butterfly
+# =============================================================================
+
+kinematics:
+  # --- Physical Angle Limits (Degrees, 0 = horizontal down, 90 = vertical up) ---
+  limits:
+    min_safe_angle_deg: 15.0        # Downstroke bottom limit (prevents chassis collision)
+    max_safe_angle_deg: 85.0        # Upstroke top limit (prevents wing-to-wing collision)
+    rest_angle_deg: 75.0            # Default perched/folded resting posture
+    horizontal_angle_deg: 20.0      # Open wing basking posture
+
+  # --- Harmonic Fourier Equation Parameters ---
+  # Equation: theta(t) = center + A1 * sin(2*pi*f*t) + A2 * sin(4*pi*f*t + phase)
+  harmonics:
+    secondary_harmonic_ratio: 0.22  # A2 / A1 ratio for biological wing flick
+    secondary_harmonic_phase_rad: 0.35 # Phase offset between harmonics
+    bilateral_phase_offset_rad: 0.0 # Phase difference between left & right wings
+
+  # --- Preset Behavioral Modes ---
+  modes:
+    sleep:
+      name: "Sleep / Slumber"
+      frequency_hz: 0.0
+      amplitude_deg: 0.0
+      center_angle_deg: 80.0
+      description: "Wings folded upright, servos unpowered or holding minimal torque"
+
+    breathing:
+      name: "Organic Respiration"
+      frequency_hz: 0.4
+      amplitude_deg: 8.0
+      center_angle_deg: 60.0
+      description: "Subtle biological chest breathing movement"
+
+    flutter:
+      name: "Gentle Flutter"
+      frequency_hz: 1.2
+      amplitude_deg: 25.0
+      center_angle_deg: 45.0
+      description: "Leisurely garden fluttering with smooth sine waves"
+
+    active_flight:
+      name: "Dynamic Flight"
+      frequency_hz: 2.2
+      amplitude_deg: 30.0
+      center_angle_deg: 45.0
+      description: "Energetic flight mode with prominent harmonic wing flick"
+
+    startled_burst:
+      name: "Startled Burst"
+      frequency_hz: 3.5
+      amplitude_deg: 32.0
+      center_angle_deg: 45.0
+      duration_ms: 2500              # Auto-recovery timeout after touch trigger
+      description: "High-frequency escape flutter triggered by antenna touch"
+
+    glide:
+      name: "Gliding / Basking"
+      frequency_hz: 0.2
+      amplitude_deg: 3.0
+      center_angle_deg: 20.0
+      description: "Wings held flat horizontally with gentle atmospheric drift"

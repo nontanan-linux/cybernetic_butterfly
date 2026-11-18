@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Electronic Butterfly — Interactive 3D CAD Inspector & Kinematics Simulator</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Three.js, OrbitControls, and Local STLLoader -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="STLLoader.js"></script>
+</head>
+<body>
+  <!-- 3D WebGL Canvas -->
+  <div id="canvas-container"></div>
+
+  <!-- Top CAD Navigation & Control Bar -->
+  <header id="top-bar">
+    <div class="brand-group">
+      <div class="badge-tag">ELECTRONIC ART & ROBOTICS</div>
+      <h1 class="logo-title">🦋 CYBERNETIC BUTTERFLY</h1>
+    </div>
+
+    <!-- ISO Flight Axis Convention Pill -->
+    <div class="axis-pill" title="ISO 8887 / ISO Flight Mechanics Standard Axis">
+      <span class="axis-pill-title">ISO AXES:</span>
+      <span class="axis-pill-x">X: Long. (Head)</span>
+      <span class="axis-pill-y">Y: Lat. (Wings)</span>
+      <span class="axis-pill-z">Z: Vert. (Up)</span>
+    </div>
+
+    <!-- CAD Model Selector Dropdown -->
+    <div class="selector-group">
+      <label for="model-select">CAD Model:</label>
+      <select id="model-select">
+        <option value="butterfly_full_assembly.stl" selected>🦋 Full Robotic Assembly</option>
+        <option value="body.stl">🧬 Main Body Chassis (Thorax & Abdomen)</option>
+        <option value="left_wing.stl">🪽 Left Wing (Joint & JST Connector)</option>
+        <option value="right_wing.stl">🪽 Right Wing (Symmetric Mirror)</option>
+        <option value="mg90s_servo.stl">⚙️ Real MG90S Micro Servo (Metal Gear)</option>
+        <option value="mg90s_servo_horn.stl">🪓 Real MG90S Servo Horn (Single-Arm)</option>
+        <option value="base_stand.stl">🏛️ Base Stand & Battery Core</option>
+        <option value="base_stand_lid.stl">🛡️ Base Stand Bottom Lid</option>
+      </select>
+    </div>
+
+    <!-- Simulation Trigger Button -->
+    <div class="action-group">
+      <button id="btn-toggle-sim" class="btn-sim-start">▶ Start Flapping Simulation</button>
+    </div>
+
+    <!-- View Tools -->
+    <div class="tools-group">
+      <button id="btn-wireframe" class="btn-tool" title="Toggle Wireframe">📐 Wireframe</button>
+      <button id="btn-autorotate" class="btn-tool" title="Toggle Rotation">🔄 Spin: OFF</button>
+      <button id="btn-reset-cam" class="btn-tool" title="Reset View">🎯 Center</button>
+    </div>
+  </header>
+
+  <!-- Left CAD Model Inspection Specs Card -->
+  <aside id="specs-card">
+    <div class="card-header">
+      <span class="card-badge" id="spec-type">CAD INSPECTION</span>
+      <h2 id="spec-name">Full Robotic Assembly</h2>
+      <p class="spec-filename" id="spec-filename">butterfly_full_assembly.stl</p>
+    </div>
+
+    <div class="card-stats">
+      <div class="stat-row">
+        <span class="stat-label">BOUNDING SIZE</span>
+        <span class="stat-value" id="spec-dim">202 × 124 × 183 mm</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">TRIANGLES</span>
+        <span class="stat-value" id="spec-triangles">Loading...</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">STEP CAD MODEL</span>
+        <span class="stat-value"><a id="spec-download-step" href="/models/butterfly_full_assembly.step" download>Download .STEP</a></span>
+      </div>
+    </div>
+
+    <div class="card-features">
+      <h3>Mechanical & Electrical Features</h3>
+      <p id="spec-features">
+        Complete robotic assembly combining the anatomical body chassis, dual MG90S metal gear micro servos, nylon horns, direct-drive wing joints with 3-pin JST connectors, and base stand power core.
+      </p>
+    </div>
+
+    <div class="status-indicator" id="sim-indicator">
+      <span class="dot idle"></span>
+      <span id="sim-status-text">Static CAD Inspection Mode (Simulation Idle)</span>
+    </div>
+  </aside>
+
+  <!-- Kinematic & Lighting Control Panel (Right Side) -->
+  <section id="kinematics-panel" class="panel-collapsed">
+    <div class="panel-toggle-bar" id="panel-toggle">
+      <span>⚡ SIMULATION & LIGHTING CONTROLS</span>
+      <button id="btn-fold" class="btn-fold">▼</button>
+    </div>
+
+    <div class="panel-body">
+      <!-- Flapping Modes -->
+      <div class="control-group">
+        <h4>Flapping Behavior</h4>
+        <div class="btn-grid">
+          <button class="mode-btn" data-mode="sleep">🌙 Sleep</button>
+          <button class="mode-btn" data-mode="breathe">🫁 Breathe</button>
+          <button class="mode-btn active" data-mode="flutter">🦋 Flutter</button>
+          <button class="mode-btn" data-mode="flight">⚡ Flight</button>
+          <button class="mode-btn highlight" id="btn-touch">✨ Touch Antenna</button>
+          <button class="mode-btn" data-mode="glide">🍃 Glide</button>
+        </div>
+      </div>
+
+      <!-- LED Palettes -->
+      <div class="control-group">
+        <h4>PCB Vein LED Palette</h4>
+        <div class="palette-grid">
+          <button class="pal-btn active" data-pal="biolum">🌊 Bioluminescence</button>
+          <button class="pal-btn" data-pal="morpho">💎 Morpho Blue</button>
+          <button class="pal-btn" data-pal="monarch">🔥 Monarch Fire</button>
+          <button class="pal-btn" data-pal="aurora">🌌 Cyber Aurora</button>
+        </div>
+      </div>
+
+      <!-- Kinematic Sliders -->
+      <div class="control-group">
+        <div class="slider-row">
+          <label>Flap Speed: <span id="val-speed">1.5 Hz</span></label>
+          <input type="range" id="slider-speed" min="0.2" max="3.5" step="0.1" value="1.5">
+        </div>
+        <div class="slider-row">
+          <label>Flap Amplitude: <span id="val-amp">28°</span></label>
+          <input type="range" id="slider-amp" min="5" max="40" step="1" value="28">
+        </div>
+        <div class="slider-row">
+          <label>Day / Night Ambient: <span id="val-light">Daylight</span></label>
+          <input type="range" id="slider-light" min="0" max="100" step="1" value="80">
+        </div>
+      </div>
+
+      <!-- Live Telemetry Bar -->
+      <div class="telemetry-bar">
+        <div class="telemetry-item">
+          <span class="t-label">WING ANGLE</span>
+          <span class="t-val" id="tele-angle">45.0°</span>
+        </div>
+        <div class="telemetry-item">
+          <span class="t-label">STROKE PHASE</span>
+          <span class="t-val" id="tele-phase">Idle</span>
+        </div>
+        <div class="telemetry-item">
+          <span class="t-label">TOUCH SENSOR</span>
+          <span class="t-val normal" id="tele-touch">Idle (0 delta)</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Application Script -->
+  <script src="app.js"></script>
+</body>
+</html>
