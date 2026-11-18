@@ -1,5 +1,5 @@
 # Auto-generated MicroPython configuration
-# Source: electronic_butterfly/config/*.param.yaml
+# Source: config/*.param.yaml
 # Generated via: python3 scripts/sync_config.py
 
 PIN_SERVO_LEFT = 2    # GPIO 2

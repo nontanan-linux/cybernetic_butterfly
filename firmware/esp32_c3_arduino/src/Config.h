@@ -1,6 +1,6 @@
 // ============================================================================
 // AUTO-GENERATED CONFIGURATION HEADER — DO NOT EDIT DIRECTLY!
-// Source: electronic_butterfly/config/*.param.yaml
+// Source: config/*.param.yaml
 // Generated via: python3 scripts/sync_config.py
 // ============================================================================
 #pragma once

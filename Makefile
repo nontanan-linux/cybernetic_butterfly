@@ -3,7 +3,6 @@
 # =============================================================================
 
 PYTHON = .venv/bin/python3
-PROJECT_DIR = electronic_butterfly
 
 .PHONY: all help build cad pcb sync sim sim-all view clean
 
@@ -24,25 +23,25 @@ help:
 	@echo "=================================================================="
 
 build:
-	$(PYTHON) $(PROJECT_DIR)/scripts/build_model.py
+	$(PYTHON) scripts/build_model.py
 
 cad:
-	$(PYTHON) $(PROJECT_DIR)/scripts/build_model.py --cad-only
+	$(PYTHON) scripts/build_model.py --cad-only
 
 pcb:
-	$(PYTHON) $(PROJECT_DIR)/scripts/build_model.py --pcb-only
+	$(PYTHON) scripts/build_model.py --pcb-only
 
 sync:
-	$(PYTHON) $(PROJECT_DIR)/scripts/sync_config.py
+	$(PYTHON) scripts/sync_config.py
 
 sim:
-	$(PYTHON) $(PROJECT_DIR)/scripts/simulate_kinematics.py --power --plot
+	$(PYTHON) scripts/simulate_kinematics.py --power --plot
 
 sim-all:
-	$(PYTHON) $(PROJECT_DIR)/scripts/simulate_kinematics.py --mode all
+	$(PYTHON) scripts/simulate_kinematics.py --mode all
 
 view:
-	$(PYTHON) $(PROJECT_DIR)/scripts/visualize_model.py
+	$(PYTHON) scripts/visualize_model.py
 
 clean:
-	$(PYTHON) $(PROJECT_DIR)/scripts/build_model.py --clean
+	$(PYTHON) scripts/build_model.py --clean

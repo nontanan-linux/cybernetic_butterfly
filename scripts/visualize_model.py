@@ -28,12 +28,12 @@ import webbrowser
 from pathlib import Path
 
 # Auto-detect and switch to .venv interpreter if needed
-WORKSPACE_ROOT = Path(__file__).resolve().parent.parent.parent
+PROJECT_DIR = Path(__file__).resolve().parent.parent
+WORKSPACE_ROOT = PROJECT_DIR
 VENV_PYTHON = WORKSPACE_ROOT / ".venv" / "bin" / "python3"
 if VENV_PYTHON.exists() and sys.executable != str(VENV_PYTHON):
     os.execv(str(VENV_PYTHON), [str(VENV_PYTHON)] + sys.argv)
 
-PROJECT_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_DIR))
 
 from config.config_loader import load_all_configs

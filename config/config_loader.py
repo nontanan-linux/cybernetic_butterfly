@@ -37,9 +37,7 @@ def deep_merge(target: Dict[str, Any], source: Dict[str, Any]) -> None:
 def auto_load_dotenv(config_dir: Path = CONFIG_DIR) -> None:
     """
     Searches for and loads key=value pairs from .env files into os.environ.
-    Checks:
-    1. electronic_butterfly/.env
-    2. project root .env
+    Checks .env in project root and parent directories.
     """
     candidates = [
         config_dir.parent / ".env",

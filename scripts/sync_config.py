@@ -26,7 +26,7 @@ def generate_cpp_header(cfg, target_path: Path):
 
     content = f"""// ============================================================================
 // AUTO-GENERATED CONFIGURATION HEADER — DO NOT EDIT DIRECTLY!
-// Source: electronic_butterfly/config/*.param.yaml
+// Source: config/*.param.yaml
 // Generated via: python3 scripts/sync_config.py
 // ============================================================================
 #pragma once
@@ -68,7 +68,7 @@ def generate_cpp_header(cfg, target_path: Path):
 def generate_micropython_config(cfg, target_path: Path):
     """Generates config.py for MicroPython."""
     content = f"""# Auto-generated MicroPython configuration
-# Source: electronic_butterfly/config/*.param.yaml
+# Source: config/*.param.yaml
 # Generated via: python3 scripts/sync_config.py
 
 PIN_SERVO_LEFT = {cfg.hardware.pins.servo_left}    # GPIO 2

@@ -8,12 +8,12 @@ This directory contains the centralized, single-source-of-truth configuration ar
 
 | File | Purpose | Key Parameters |
 | :--- | :--- | :--- |
-| **[`network.param.yaml`](file:///home/tacv/workspace/ElectronicsArt/electronic_butterfly/config/network.param.yaml)** | Network & Communications | Host IP, HTTP Port (`80`), Dev Port (`8080`), SoftAP SSID/Password, Station Wi-Fi, mDNS hostname (`butterfly.local`), WebSocket telemetry rate |
-| **[`hardware.param.yaml`](file:///home/tacv/workspace/ElectronicsArt/electronic_butterfly/config/hardware.param.yaml)** | Physical Electronics & Pins | ESP32-C3 GPIO allocations (Servo Left/Right, WS2812B Data, LDR ADC, Touch Pins), Servo PWM timing ($50\text{ Hz}$, $500 - 2500\mu\text{s}$), battery ratings |
-| **[`kinematics.param.yaml`](file:///home/tacv/workspace/ElectronicsArt/electronic_butterfly/config/kinematics.param.yaml)** | Flapping Kinematics | Travel limits ($15^\circ - 85^\circ$), rest angle ($75^\circ$), harmonic Fourier ratios ($A_2/A_1 = 0.22$), behavioral mode profiles (Sleep, Breathe, Flutter, Flight, Startled, Glide) |
-| **[`effects.param.yaml`](file:///home/tacv/workspace/ElectronicsArt/electronic_butterfly/config/effects.param.yaml)** | LED Shaders & Sensors | 16x WS2812B NeoPixel settings, RGB palettes (Bioluminescence, Morpho Blue, Monarch Fire, Cyber Aurora), LDR day/night ADC thresholds, touch trigger delta |
-| **[`default_config.json`](file:///home/tacv/workspace/ElectronicsArt/electronic_butterfly/config/default_config.json)** | Compiled Unified JSON | Auto-generated JSON used by web simulators and runtime microservices |
-| **[`config_loader.py`](file:///home/tacv/workspace/ElectronicsArt/electronic_butterfly/config/config_loader.py)** | Python Config Engine | Loads YAMLs, merges dot-accessible dictionaries (`cfg.network.server.http_port`), validates physical safety bounds, applies `.env` overrides |
+| **[`network.param.yaml`](file:///home/tacv/workspace/ElectronicsArt/config/network.param.yaml)** | Network & Communications | Host IP, HTTP Port (`80`), Dev Port (`8080`), SoftAP SSID/Password, Station Wi-Fi, mDNS hostname (`butterfly.local`), WebSocket telemetry rate |
+| **[`hardware.param.yaml`](file:///home/tacv/workspace/ElectronicsArt/config/hardware.param.yaml)** | Physical Electronics & Pins | ESP32-C3 GPIO allocations (Servo Left/Right, WS2812B Data, LDR ADC, Touch Pins), Servo PWM timing ($50\text{ Hz}$, $500 - 2500\mu\text{s}$), battery ratings |
+| **[`kinematics.param.yaml`](file:///home/tacv/workspace/ElectronicsArt/config/kinematics.param.yaml)** | Flapping Kinematics | Travel limits ($15^\circ - 85^\circ$), rest angle ($75^\circ$), harmonic Fourier ratios ($A_2/A_1 = 0.22$), behavioral mode profiles (Sleep, Breathe, Flutter, Flight, Startled, Glide) |
+| **[`effects.param.yaml`](file:///home/tacv/workspace/ElectronicsArt/config/effects.param.yaml)** | LED Shaders & Sensors | 16x WS2812B NeoPixel settings, RGB palettes (Bioluminescence, Morpho Blue, Monarch Fire, Cyber Aurora), LDR day/night ADC thresholds, touch trigger delta |
+| **[`default_config.json`](file:///home/tacv/workspace/ElectronicsArt/config/default_config.json)** | Compiled Unified JSON | Auto-generated JSON used by web simulators and runtime microservices |
+| **[`config_loader.py`](file:///home/tacv/workspace/ElectronicsArt/config/config_loader.py)** | Python Config Engine | Loads YAMLs, merges dot-accessible dictionaries (`cfg.network.server.http_port`), validates physical safety bounds, applies `.env` overrides |
 
 ---
 
@@ -22,8 +22,10 @@ This directory contains the centralized, single-source-of-truth configuration ar
 Whenever you modify any `.param.yaml` or `.env` file, run the synchronizer script:
 
 ```bash
-cd /home/tacv/workspace/ElectronicsArt/electronic_butterfly
-/home/tacv/workspace/ElectronicsArt/.venv/bin/python3 scripts/sync_config.py
+cd /home/tacv/workspace/ElectronicsArt
+python3 scripts/sync_config.py
+# หรือ
+make sync
 ```
 
 This single command automatically updates:
@@ -47,9 +49,9 @@ This single command automatically updates:
 - **Port:** `8050`
 - Launch with:
   ```bash
-  python3 main.py view
-  # หรือ
   python3 scripts/visualize_model.py
+  # หรือ
+  make view
   ```
 
 ---
