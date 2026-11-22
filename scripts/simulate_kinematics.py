@@ -67,14 +67,14 @@ def compute_wing_angle(
 def estimate_power_draw(
     angle: float,
     ang_vel_deg_s: float,
-    num_leds: int = 16,
+    num_leds: int = 8,
     led_brightness: int = 180
 ) -> Tuple[float, float]:
     """
     Estimates total system current (mA) and power (mW) at 5V:
     - ESP32-C3 Base: ~45 mA
     - 2x Servos: 15 mA idle holding + load proportional to |velocity| (up to 350 mA)
-    - 16x WS2812B LEDs: ~1 mA quiescent + ~12 mA per LED at current brightness
+    - 8x WS2812B LEDs (4 per wing): ~1 mA quiescent + ~12 mA per LED at current brightness
     """
     mcu_ma = 45.0
     servo_holding_ma = 30.0 # 15 mA per servo

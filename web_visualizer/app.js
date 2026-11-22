@@ -3,9 +3,9 @@
  * Powered by Three.js
  *
  * Coordinate Convention: ISO Aerospace / Robotics Standard
- * - X: Longitudinal axis (+X = Forward / Head / Leading edge, -X = Aft / Tail)
+ * - X: Longitudinal axis (+X = Forward / Head / Antennae, -X = Aft / Abdomen)
  * - Y: Lateral axis (+Y = Port / Left Wing, -Y = Starboard / Right Wing)
- * - Z: Vertical axis (+Z = Upward / Dorsal, -Z = Downward / Ventral / Stand)
+ * - Z: Vertical axis (+Z = Upward / Dorsal, -Z = Downward / Ventral / Legs)
  */
 
 // Global 3D State
@@ -17,21 +17,19 @@ let isWireframe = false;
 let isAutoRotate = false;
 let isSimulating = false;
 
-// Geometry Cache for Real CAD STL Models
+// Geometry Cache for CAD STL Models
 const stlCache = {};
 
-// Kinematics & Simulation State
+// Kinematics & Simulation State (Matches config/kinematics.param.yaml)
 let simAssemblyGroup = null;
 let simLeftWingGroup = null;
 let simRightWingGroup = null;
 let currentMode = "flutter";
 let currentPalette = "biolum";
-let flapSpeed = 1.5;      // Hz
-let flapAmp = 28;         // Degrees
-let centerAngle = 45;     // Degrees
+let flapSpeed = 1.2;      // Hz
+let flapAmp = 25;         // Degrees
+let centerAngle = 45;     // Degrees (45° = Horizontal neutral CAD posture)
 let isSurging = false;
-let surgeStartTime = 0;
-let lastTouchVal = 0;
 
 // LED Meshes
 let ledMeshesLeft = [], ledMeshesRight = [];
@@ -57,8 +55,8 @@ function initViewer() {
 
   // Camera setup (ISO Coordinate System: Z is UP)
   camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 2500);
-  camera.up.set(0, 0, 1); // Z-axis is VERTICAL UP
-  camera.position.set(160, -180, 110); // Isometric view: from front-right-above
+  camera.up.set(0, 0, 1);
+  camera.position.set(160, -180, 110);
 
   // WebGL Renderer
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -74,19 +72,18 @@ function initViewer() {
   controls.dampingFactor = 0.05;
   controls.autoRotate = false;
   controls.autoRotateSpeed = 1.0;
-  controls.target.set(0, 0, -10);
+  controls.target.set(0, 0, -5);
 
   // Setup Lighting
   setupLighting();
 
-  // Horizontal Ground Grid in X-Y Plane at base of stand (Z = -92)
-  const gridHelper = new THREE.GridHelper(300, 30, 0x1e293b, 0x0f172a);
-  gridHelper.rotation.x = Math.PI / 2; // Lie in the horizontal X-Y plane
-  gridHelper.position.set(0, 0, -92);
+  // Horizontal Ground Grid in X-Y Plane at butterfly foot level (Z = -38.3)
+  const gridHelper = new THREE.GridHelper(600, 60, 0x1e293b, 0x0f172a);
+  gridHelper.rotation.x = Math.PI / 2;
+  gridHelper.position.set(0, 0, -38.3);
   scene.add(gridHelper);
 
   // 3D Coordinate Tripod (AxesHelper in ISO convention)
-  // Red = X (Longitudinal), Green = Y (Lateral), Blue = Z (Vertical Up)
   const axesHelper = new THREE.AxesHelper(60);
   scene.add(axesHelper);
 
@@ -98,13 +95,10 @@ function initViewer() {
   simAssemblyGroup.visible = false;
   scene.add(simAssemblyGroup);
 
-  // Load Initial Model (Default: Static CAD Inspection)
+  // Load Initial Model
   loadCADModel(currentSTLFile);
 
-  // Window resize handler
   window.addEventListener("resize", onWindowResize);
-
-  // Animation Loop
   animate(0);
 }
 
@@ -112,7 +106,6 @@ function setupLighting() {
   ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
   scene.add(ambientLight);
 
-  // Key directional light from upper front
   dirLight = new THREE.DirectionalLight(0xffffff, 1.4);
   dirLight.position.set(120, -140, 180);
   dirLight.castShadow = true;
@@ -120,18 +113,15 @@ function setupLighting() {
   dirLight.shadow.mapSize.height = 1024;
   scene.add(dirLight);
 
-  // Fill directional light from upper rear
   const fillLight = new THREE.DirectionalLight(0x38bdf8, 0.6);
   fillLight.position.set(-100, 120, 80);
   scene.add(fillLight);
 
-  // Soft bottom fill
   const bottomLight = new THREE.DirectionalLight(0x10b981, 0.25);
   bottomLight.position.set(0, 0, -120);
   scene.add(bottomLight);
 }
 
-// Fetch Model Metadata Catalog from Server API
 async function fetchModelCatalog() {
   try {
     const res = await fetch("/api/models");
@@ -147,7 +137,6 @@ async function fetchModelCatalog() {
   }
 }
 
-// Helper to Load and Cache Real STL Geometry
 function loadSTLGeometry(filename) {
   return new Promise((resolve, reject) => {
     if (stlCache[filename]) {
@@ -168,62 +157,125 @@ function loadSTLGeometry(filename) {
   });
 }
 
+function applyWireframeToGroup(group, wireframeState) {
+  if (!group) return;
+  group.traverse((child) => {
+    if (child.isMesh && child.material) {
+      child.material.wireframe = wireframeState;
+    }
+  });
+}
+
 // Load CAD Model (.STL) in Static Inspection Mode
-function loadCADModel(stlFileName) {
+async function loadCADModel(stlFileName) {
   currentSTLFile = stlFileName;
 
-  // Clear previous static CAD meshes
   while (activeCADGroup.children.length > 0) {
-    const obj = activeCADGroup.children[0];
-    if (obj.geometry && !stlCache[stlFileName]) obj.geometry.dispose();
-    if (obj.material) obj.material.dispose();
-    activeCADGroup.remove(obj);
+    activeCADGroup.remove(activeCADGroup.children[0]);
   }
 
-  // Ensure simulation group is hidden
   if (!isSimulating) {
     simAssemblyGroup.visible = false;
     activeCADGroup.visible = true;
   }
 
-  // Update UI Stats
   updateSpecsCard(stlFileName);
   document.getElementById("spec-triangles").innerText = "Loading STL...";
 
-  loadSTLGeometry(stlFileName).then(geometry => {
-    // Compute dimensions in ISO coordinates
-    geometry.computeBoundingBox();
-    const bb = geometry.boundingBox;
-    const sizeX = (bb.max.x - bb.min.x).toFixed(1);
-    const sizeY = (bb.max.y - bb.min.y).toFixed(1);
-    const sizeZ = (bb.max.z - bb.min.z).toFixed(1);
-    document.getElementById("spec-dim").innerText = `X:${sizeX} × Y:${sizeY} × Z:${sizeZ} mm`;
+  try {
+    if (stlFileName === "butterfly_full_assembly.stl") {
+      // Load 4 Generated Parts + 2 External Read-Only Hardware Models
+      const [bodyGeom, servoGeom, hornGeom, leftWingGeom, rightWingGeom, legsGeom] = await Promise.all([
+        loadSTLGeometry("body.stl"),
+        loadSTLGeometry("mg90s_servo.stl"),
+        loadSTLGeometry("mg90s_servo_horn.stl"),
+        loadSTLGeometry("left_wing.stl"),
+        loadSTLGeometry("right_wing.stl"),
+        loadSTLGeometry("butterfly_legs.stl")
+      ]);
 
-    const triCount = geometry.attributes.position.count / 3;
-    document.getElementById("spec-triangles").innerText = `${triCount.toLocaleString()} Triangles`;
+      const makeMat = (hex, metal = 0.45, rough = 0.38, doubleSide = false) =>
+        new THREE.MeshStandardMaterial({
+          color: hex,
+          metalness: metal,
+          roughness: rough,
+          wireframe: isWireframe,
+          side: doubleSide ? THREE.DoubleSide : THREE.FrontSide
+        });
 
-    // PBR Material matching engineering color
-    const meta = modelCatalog[stlFileName] || {};
-    const matColor = meta.color ? new THREE.Color(meta.color) : new THREE.Color(0x38bdf8);
+      const bodyMesh = new THREE.Mesh(bodyGeom, makeMat(0x475569, 0.5, 0.4));
 
-    const material = new THREE.MeshStandardMaterial({
-      color: matColor,
-      metalness: 0.45,
-      roughness: 0.35,
-      wireframe: isWireframe
-    });
+      const servoL = new THREE.Mesh(servoGeom, makeMat(0x1d4ed8, 0.4, 0.35));
+      servoL.rotation.set(0, Math.PI / 2, Math.PI / 2, "XYZ");
+      servoL.position.set(8.0, 9.0, 2.0);
 
-    activeCADMesh = new THREE.Mesh(geometry, material);
-    activeCADMesh.castShadow = true;
-    activeCADMesh.receiveShadow = true;
-    activeCADGroup.add(activeCADMesh);
+      const servoR = new THREE.Mesh(servoGeom, makeMat(0x1d4ed8, 0.4, 0.35));
+      servoR.rotation.set(0, Math.PI / 2, Math.PI / 2, "XYZ");
+      servoR.position.set(8.0, -9.0, 2.0);
 
-    // Frame camera smoothly in ISO coordinate space
-    fitCameraToObject(activeCADMesh);
-  }).catch(err => {
+      const hornL = new THREE.Mesh(hornGeom, makeMat(0xf8fafc, 0.2, 0.4));
+      hornL.rotation.set(0, Math.PI / 2, Math.PI / 2, "XYZ");
+      hornL.position.set(8.0, 9.0, 2.0);
+
+      const hornR = new THREE.Mesh(hornGeom, makeMat(0xf8fafc, 0.2, 0.4));
+      hornR.rotation.set(0, Math.PI / 2, -Math.PI / 2, "XYZ");
+      hornR.position.set(8.0, -9.0, 2.0);
+
+      const wingL = new THREE.Mesh(leftWingGeom, makeMat(0x10b981, 0.3, 0.35, true));
+      const wingR = new THREE.Mesh(rightWingGeom, makeMat(0x10b981, 0.3, 0.35, true));
+
+      const legsMesh = new THREE.Mesh(legsGeom, makeMat(0x334155, 0.5, 0.5));
+
+      const allParts = [bodyMesh, servoL, servoR, hornL, hornR, wingL, wingR, legsMesh];
+      let totalTris = 0;
+      allParts.forEach((m) => {
+        m.castShadow = true;
+        m.receiveShadow = true;
+        activeCADGroup.add(m);
+        totalTris += m.geometry.attributes.position.count / 3;
+      });
+
+      activeCADMesh = activeCADGroup;
+      const bb = new THREE.Box3().setFromObject(activeCADGroup);
+      const size = bb.getSize(new THREE.Vector3());
+      document.getElementById("spec-dim").innerText =
+        `X:${size.x.toFixed(1)} × Y:${size.y.toFixed(1)} × Z:${size.z.toFixed(1)} mm`;
+      document.getElementById("spec-triangles").innerText = `${totalTris.toLocaleString()} Triangles (8 Solids)`;
+
+      fitCameraToObject(activeCADGroup);
+    } else {
+      const geometry = await loadSTLGeometry(stlFileName);
+      geometry.computeBoundingBox();
+      const bb = geometry.boundingBox;
+      const sizeX = (bb.max.x - bb.min.x).toFixed(1);
+      const sizeY = (bb.max.y - bb.min.y).toFixed(1);
+      const sizeZ = (bb.max.z - bb.min.z).toFixed(1);
+      document.getElementById("spec-dim").innerText = `X:${sizeX} × Y:${sizeY} × Z:${sizeZ} mm`;
+
+      const triCount = geometry.attributes.position.count / 3;
+      document.getElementById("spec-triangles").innerText = `${triCount.toLocaleString()} Triangles`;
+
+      const meta = modelCatalog[stlFileName] || {};
+      const matColor = meta.color ? new THREE.Color(meta.color) : new THREE.Color(0x38bdf8);
+
+      const material = new THREE.MeshStandardMaterial({
+        color: matColor,
+        metalness: 0.45,
+        roughness: 0.35,
+        wireframe: isWireframe
+      });
+
+      activeCADMesh = new THREE.Mesh(geometry, material);
+      activeCADMesh.castShadow = true;
+      activeCADMesh.receiveShadow = true;
+      activeCADGroup.add(activeCADMesh);
+
+      fitCameraToObject(activeCADMesh);
+    }
+  } catch (err) {
     console.error("Error loading STL model:", err);
     document.getElementById("spec-triangles").innerText = "Load Failed";
-  });
+  }
 }
 
 // Update Specs Card on left HUD
@@ -231,9 +283,9 @@ function updateSpecsCard(stlFileName) {
   const meta = modelCatalog[stlFileName] || {
     name: stlFileName.replace(".stl", "").replace(/_/g, " ").toUpperCase(),
     file: stlFileName,
-    step: stlFileName.replace(".stl", ".step"),
-    type: "CAD Model",
-    features: "Precision 3D CAD model generated via build123d parametric script."
+    step: stlFileName === "butterfly_full_assembly.stl" ? "butterfly_full_assembly.step" : null,
+    type: "CAD MODEL",
+    features: "Precision 3D CAD model."
   };
 
   document.getElementById("spec-name").innerText = meta.name;
@@ -241,14 +293,16 @@ function updateSpecsCard(stlFileName) {
   document.getElementById("spec-features").innerText = meta.features;
   document.getElementById("spec-type").innerText = (meta.type || "CAD INSPECTION").toUpperCase();
 
-  const dlStep = document.getElementById("spec-download-step");
-  if (dlStep) {
-    dlStep.href = `/models/${meta.step || meta.file.replace(".stl", ".step")}`;
-    dlStep.innerText = `Download .STEP ${meta.size_step ? "(" + meta.size_step + ")" : ""}`;
+  const stepContainer = document.getElementById("spec-step-container");
+  if (stepContainer) {
+    if (meta.step) {
+      stepContainer.innerHTML = `<a id="spec-download-step" href="/models/${meta.step}" download>Download .STEP ${meta.size_step ? "(" + meta.size_step + ")" : ""}</a>`;
+    } else {
+      stepContainer.innerHTML = `<span style="color:#34d399;">.STL Only (3D Print Part)</span>`;
+    }
   }
 }
 
-// Adjust camera distance to frame any sized object in ISO Z-Up Space
 function fitCameraToObject(object, offset = 1.4) {
   const boundingBox = new THREE.Box3();
   boundingBox.setFromObject(object);
@@ -261,13 +315,11 @@ function fitCameraToObject(object, offset = 1.4) {
   let dist = Math.abs((maxDim / 2) / Math.tan(fov / 2)) * offset;
   dist = Math.max(dist, 50);
 
-  // Position camera at front-right isometric angle in ISO coordinate space (Z is UP)
   camera.position.set(center.x + dist * 0.9, center.y - dist * 1.1, center.z + dist * 0.65);
   controls.target.copy(center);
   controls.update();
 }
 
-// Toggle Simulation Mode
 async function toggleSimulation() {
   isSimulating = !isSimulating;
   const btn = document.getElementById("btn-toggle-sim");
@@ -282,7 +334,6 @@ async function toggleSimulation() {
     indicator.querySelector(".dot").className = "dot active";
     statusText.innerText = "Active Kinematic Simulation (Real CAD Model Flapping)";
 
-    // Switch to Real CAD Articulated Assembly
     activeCADGroup.visible = false;
     simAssemblyGroup.visible = true;
 
@@ -291,6 +342,7 @@ async function toggleSimulation() {
       await buildArticulatedButterfly();
       statusText.innerText = "Active Kinematic Simulation (Real CAD Model Flapping)";
     }
+    applyWireframeToGroup(simAssemblyGroup, isWireframe);
     fitCameraToObject(simAssemblyGroup);
   } else {
     btn.innerText = "▶ Start Flapping Simulation";
@@ -299,7 +351,6 @@ async function toggleSimulation() {
     indicator.querySelector(".dot").className = "dot idle";
     statusText.innerText = "Static CAD Inspection Mode (Simulation Idle)";
 
-    // Switch back to Static CAD Model
     simAssemblyGroup.visible = false;
     activeCADGroup.visible = true;
     if (activeCADMesh) {
@@ -317,71 +368,60 @@ async function buildArticulatedButterfly() {
   const root = new THREE.Group();
   simAssemblyGroup.add(root);
 
-  // Real CAD PBR Materials
-  const bodyMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.5, roughness: 0.4 });
-  const servoMat = new THREE.MeshStandardMaterial({ color: 0x1d4ed8, metalness: 0.4, roughness: 0.35 });
-  const hornMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, metalness: 0.2, roughness: 0.4 });
+  const bodyMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.5, roughness: 0.4, wireframe: isWireframe });
+  const servoMat = new THREE.MeshStandardMaterial({ color: 0x1d4ed8, metalness: 0.4, roughness: 0.35, wireframe: isWireframe });
+  const hornMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, metalness: 0.2, roughness: 0.4, wireframe: isWireframe });
   const wingMat = new THREE.MeshStandardMaterial({
     color: 0x10b981,
     metalness: 0.3,
     roughness: 0.35,
-    side: THREE.DoubleSide
+    side: THREE.DoubleSide,
+    wireframe: isWireframe
   });
-  const standMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.5, roughness: 0.5 });
+  const legsMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.5, roughness: 0.5, wireframe: isWireframe });
 
-  // Load the EXACT SAME real CAD STL geometries
-  const [bodyGeom, servoGeom, hornGeom, leftWingGeom, rightWingGeom, standGeom, lidGeom] = await Promise.all([
+  const [bodyGeom, servoGeom, hornGeom, leftWingGeom, rightWingGeom, legsGeom] = await Promise.all([
     loadSTLGeometry("body.stl"),
     loadSTLGeometry("mg90s_servo.stl"),
     loadSTLGeometry("mg90s_servo_horn.stl"),
     loadSTLGeometry("left_wing.stl"),
     loadSTLGeometry("right_wing.stl"),
-    loadSTLGeometry("base_stand.stl"),
-    loadSTLGeometry("base_stand_lid.stl")
+    loadSTLGeometry("butterfly_legs.stl")
   ]);
 
-  // 1. Central Body Chassis (Real body.stl)
+  // 1. Central Body Chassis (Head + Clubbed Antennae + Thorax + 14500 Battery Abdomen)
   const bodyMesh = new THREE.Mesh(bodyGeom, bodyMat);
   bodyMesh.castShadow = true;
   bodyMesh.receiveShadow = true;
   root.add(bodyMesh);
 
-  // 2. Real MG90S Servos installed inside the body pockets
-  // Left Servo in left thorax bay
+  // 2. External MG90S Servos installed inside thorax bays
   const servoLeftMesh = new THREE.Mesh(servoGeom, servoMat);
-  servoLeftMesh.rotation.set(Math.PI / 2, 0, Math.PI / 2, 'XYZ');
+  servoLeftMesh.rotation.set(0, Math.PI / 2, Math.PI / 2, "XYZ");
   servoLeftMesh.position.set(8.0, 9.0, 2.0);
   root.add(servoLeftMesh);
 
-  // Right Servo in right thorax bay
   const servoRightMesh = new THREE.Mesh(servoGeom, servoMat);
-  servoRightMesh.rotation.set(Math.PI / 2, 0, Math.PI / 2, 'XYZ');
+  servoRightMesh.rotation.set(0, Math.PI / 2, Math.PI / 2, "XYZ");
   servoRightMesh.position.set(8.0, -9.0, 2.0);
   root.add(servoRightMesh);
 
-  // 3. Base Stand & Lid
-  const standMesh = new THREE.Mesh(standGeom, standMat);
-  standMesh.position.set(-2.0, 0, -92.0);
-  root.add(standMesh);
-
-  const lidMesh = new THREE.Mesh(lidGeom, standMat);
-  lidMesh.position.set(-2.0, 0, -92.0);
-  root.add(lidMesh);
+  // 3. Tucked 6 Butterfly Legs (butterfly_legs.stl)
+  const legsMesh = new THREE.Mesh(legsGeom, legsMat);
+  root.add(legsMesh);
 
   // 4. Left Articulated Wing Pivot Group (Hinged at servo shaft X=8.0, Y=9.0, Z=2.0)
   simLeftWingGroup = new THREE.Group();
   simLeftWingGroup.position.set(8.0, 9.0, 2.0);
   root.add(simLeftWingGroup);
 
-  // Left Horn mated onto left servo spline
   const hornLeftMesh = new THREE.Mesh(hornGeom, hornMat);
-  hornLeftMesh.rotation.set(Math.PI / 2, 0, Math.PI / 2, 'XYZ');
+  hornLeftMesh.rotation.set(0, Math.PI / 2, Math.PI / 2, "XYZ");
   hornLeftMesh.position.set(0, 0, 0);
   simLeftWingGroup.add(hornLeftMesh);
 
-  // Real Left Wing (left_wing.stl) mounted onto the horn & hinge
   const leftWingMesh = new THREE.Mesh(leftWingGeom, wingMat);
-  leftWingMesh.position.set(-8.0, -9.0, -2.0); // Offset so hinge axis matches (0, 0, 0)
+  leftWingMesh.position.set(-8.0, -9.0, -2.0);
   simLeftWingGroup.add(leftWingMesh);
 
   // 5. Right Articulated Wing Pivot Group (Hinged at servo shaft X=8.0, Y=-9.0, Z=2.0)
@@ -389,30 +429,28 @@ async function buildArticulatedButterfly() {
   simRightWingGroup.position.set(8.0, -9.0, 2.0);
   root.add(simRightWingGroup);
 
-  // Right Horn mated onto right servo spline
   const hornRightMesh = new THREE.Mesh(hornGeom, hornMat);
-  hornRightMesh.rotation.set(-Math.PI / 2, 0, -Math.PI / 2, 'XYZ');
+  hornRightMesh.rotation.set(0, Math.PI / 2, -Math.PI / 2, "XYZ");
   hornRightMesh.position.set(0, 0, 0);
   simRightWingGroup.add(hornRightMesh);
 
-  // Real Right Wing (right_wing.stl) mounted onto the horn & hinge
   const rightWingMesh = new THREE.Mesh(rightWingGeom, wingMat);
   rightWingMesh.position.set(-8.0, 9.0, -2.0);
   simRightWingGroup.add(rightWingMesh);
 
-  // 6. Addressable LED Pixels on the Real Lateral Wings (in X-Y plane)
+  // 6. Addressable LED Pixels seated inside the 4 LED vein-node pockets on each 2x-larger, 1.2mm-thin wing blade
   ledMeshesLeft = [];
   ledMeshesRight = [];
   const ledCoords = [
-    [32.0, 36.0, 1.8],
-    [36.0, 68.0, 1.8],
-    [10.0, 60.0, 1.8],
-    [-15.0, 45.0, 1.8]
+    [54.0, 92.0, 2.40],
+    [86.0, 175.0, 2.40],
+    [36.0, 135.0, 2.40],
+    [-52.0, 105.0, 2.40]
   ];
 
   ledCoords.forEach(([wx, wy, wz]) => {
-    const ledGeo = new THREE.CylinderGeometry(3.5, 3.5, 1.2, 16);
-    ledGeo.rotateX(Math.PI / 2); // Align cylinder axis along Z
+    const ledGeo = new THREE.CylinderGeometry(3.5, 3.5, 0.9, 16);
+    ledGeo.rotateX(Math.PI / 2);
 
     const ledMatL = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
     const ledL = new THREE.Mesh(ledGeo, ledMatL);
@@ -428,35 +466,29 @@ async function buildArticulatedButterfly() {
   });
 }
 
-// UI Event Listeners
 function setupUIEvents() {
-  // CAD Model Selector Dropdown
   const select = document.getElementById("model-select");
   select.addEventListener("change", (e) => {
     const chosen = e.target.value;
     if (isSimulating) {
-      toggleSimulation(); // Stop simulation when inspecting individual CAD parts
+      toggleSimulation();
     }
     loadCADModel(chosen);
   });
 
-  // Start / Stop Simulation Button
   document.getElementById("btn-toggle-sim").addEventListener("click", () => {
     toggleSimulation();
   });
 
-  // Wireframe Toggle
   const btnWireframe = document.getElementById("btn-wireframe");
   btnWireframe.addEventListener("click", () => {
     isWireframe = !isWireframe;
     btnWireframe.classList.toggle("active", isWireframe);
     btnWireframe.innerText = isWireframe ? "📐 Solid" : "📐 Wireframe";
-    if (activeCADMesh && activeCADMesh.material) {
-      activeCADMesh.material.wireframe = isWireframe;
-    }
+    applyWireframeToGroup(activeCADGroup, isWireframe);
+    applyWireframeToGroup(simAssemblyGroup, isWireframe);
   });
 
-  // Auto-Rotate Toggle (Default: OFF)
   const btnRotate = document.getElementById("btn-autorotate");
   btnRotate.addEventListener("click", () => {
     isAutoRotate = !isAutoRotate;
@@ -465,7 +497,6 @@ function setupUIEvents() {
     btnRotate.innerText = isAutoRotate ? "🔄 Spin: ON" : "🔄 Spin: OFF";
   });
 
-  // Reset Camera View (Returns to front-right isometric view in ISO Z-Up space)
   document.getElementById("btn-reset-cam").addEventListener("click", () => {
     if (isSimulating && simAssemblyGroup) {
       fitCameraToObject(simAssemblyGroup);
@@ -473,18 +504,16 @@ function setupUIEvents() {
       fitCameraToObject(activeCADMesh);
     } else {
       camera.position.set(160, -180, 110);
-      controls.target.set(0, 0, -10);
+      controls.target.set(0, 0, -5);
       controls.update();
     }
   });
 
-  // Simulation Panel Fold / Unfold
   const panelToggle = document.getElementById("panel-toggle");
   panelToggle.addEventListener("click", () => {
     document.getElementById("kinematics-panel").classList.toggle("panel-collapsed");
   });
 
-  // Kinematic Behavior Mode Buttons
   document.querySelectorAll(".mode-btn").forEach(btn => {
     btn.addEventListener("click", (e) => {
       document.querySelectorAll(".mode-btn").forEach(b => b.classList.remove("active"));
@@ -494,13 +523,11 @@ function setupUIEvents() {
     });
   });
 
-  // Touch Antenna Surge
   const btnTouch = document.getElementById("btn-touch");
   if (btnTouch) {
     btnTouch.addEventListener("click", triggerCapacitiveTouch);
   }
 
-  // LED Palette Buttons
   document.querySelectorAll(".pal-btn").forEach(btn => {
     btn.addEventListener("click", (e) => {
       document.querySelectorAll(".pal-btn").forEach(b => b.classList.remove("active"));
@@ -509,7 +536,6 @@ function setupUIEvents() {
     });
   });
 
-  // Sliders
   const sliderSpeed = document.getElementById("slider-speed");
   const valSpeed = document.getElementById("val-speed");
   sliderSpeed.addEventListener("input", (e) => {
@@ -538,29 +564,29 @@ function applyKinematicMode(mode) {
   currentMode = mode;
   switch (mode) {
     case "sleep":
-      flapSpeed = 0.2;
-      flapAmp = 8;
-      centerAngle = 65;
+      flapSpeed = 0.0;
+      flapAmp = 0;
+      centerAngle = 80;
       break;
     case "breathe":
-      flapSpeed = 0.6;
-      flapAmp = 16;
-      centerAngle = 50;
+      flapSpeed = 0.4;
+      flapAmp = 8;
+      centerAngle = 60;
       break;
     case "flutter":
-      flapSpeed = 1.8;
-      flapAmp = 28;
+      flapSpeed = 1.2;
+      flapAmp = 25;
       centerAngle = 45;
       break;
     case "flight":
-      flapSpeed = 3.2;
-      flapAmp = 38;
-      centerAngle = 40;
+      flapSpeed = 2.2;
+      flapAmp = 30;
+      centerAngle = 45;
       break;
     case "glide":
-      flapSpeed = 0.1;
-      flapAmp = 4;
-      centerAngle = 18;
+      flapSpeed = 0.2;
+      flapAmp = 3;
+      centerAngle = 20;
       break;
   }
   document.getElementById("slider-speed").value = flapSpeed;
@@ -571,8 +597,6 @@ function applyKinematicMode(mode) {
 
 function triggerCapacitiveTouch() {
   isSurging = true;
-  surgeStartTime = performance.now() / 1000;
-  lastTouchVal = 450;
   const teleTouch = document.getElementById("tele-touch");
   teleTouch.innerText = "TRIGGERED! (+450 delta)";
   teleTouch.style.color = "#f59e0b";
@@ -581,48 +605,59 @@ function triggerCapacitiveTouch() {
     isSurging = false;
     teleTouch.innerText = "Idle (0 delta)";
     teleTouch.style.color = "#34d399";
-  }, 2200);
+  }, 2500);
 }
 
-// Animation & Render Loop
 function animate(timestamp) {
   requestAnimationFrame(animate);
 
-  const t = timestamp * 0.001; // seconds
-
-  // Update OrbitControls
+  const t = timestamp * 0.001;
   controls.update();
 
-  // If in Kinematic Simulation Mode: Flap the REAL CAD WINGS
   if (isSimulating && simLeftWingGroup && simRightWingGroup) {
     let activeSpeed = flapSpeed;
     let activeAmp = flapAmp;
+    let activeCenter = centerAngle;
 
     if (isSurging) {
-      activeSpeed = 3.6;
-      activeAmp = 38;
+      activeSpeed = 3.5;
+      activeAmp = 32;
+      activeCenter = 45;
     }
 
-    const angleRad = Math.sin(t * activeSpeed * Math.PI * 2) * (activeAmp * (Math.PI / 180));
-    const currentAngleDeg = centerAngle + (angleRad * (180 / Math.PI));
+    let currentAngleDeg = activeCenter;
+    let angVel = 0.0;
 
-    // Flapping rotation around X-axis (roll / dihedral flapping axis) -> causes vertical Z travel!
-    simLeftWingGroup.rotation.x = angleRad;
-    simRightWingGroup.rotation.x = -angleRad;
+    if (activeSpeed > 0.0 && activeAmp > 0.0) {
+      const omega = 2.0 * Math.PI * activeSpeed;
+      const h1 = Math.sin(omega * t);
+      const h2 = 0.22 * Math.sin(2.0 * omega * t + 0.35);
+      const stroke = h1 + h2;
+      currentAngleDeg = activeCenter + activeAmp * stroke;
+      angVel = activeAmp * (omega * Math.cos(omega * t) + 2.0 * omega * 0.22 * Math.cos(2.0 * omega * t + 0.35));
+    }
 
-    // Update Telemetry
+    currentAngleDeg = Math.max(15.0, Math.min(85.0, currentAngleDeg));
+
+    const flapRad = ((currentAngleDeg - 45.0) * Math.PI) / 180.0;
+    simLeftWingGroup.rotation.x = flapRad;
+    simRightWingGroup.rotation.x = -flapRad;
+
     document.getElementById("tele-angle").innerText = `${currentAngleDeg.toFixed(1)}°`;
-    const isDown = Math.cos(t * activeSpeed * Math.PI * 2) > 0;
-    document.getElementById("tele-phase").innerText = isDown ? "Downstroke" : "Upstroke";
+    const phaseText =
+      activeSpeed <= 0.0 || activeAmp <= 0.0
+        ? "Folded (Rest)"
+        : angVel >= 0.0
+        ? "▲ Upstroke"
+        : "▼ Downstroke";
+    document.getElementById("tele-phase").innerText = phaseText;
 
-    // Update LED Shaders
     updateLEDColors(t);
   }
 
   renderer.render(scene, camera);
 }
 
-// Update LED Pixel Colors based on Selected Palette
 function updateLEDColors(t) {
   const palettes = {
     biolum: [0x00f0ff, 0x00a8ff, 0x0044ff, 0x00e5ff],

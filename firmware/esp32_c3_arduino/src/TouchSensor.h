@@ -2,6 +2,19 @@
 #include <Arduino.h>
 #include "Config.h"
 
+#ifndef PIN_TOUCH_ANT_L
+#define PIN_TOUCH_ANT_L         0
+#endif
+#ifndef PIN_TOUCH_ANT_R
+#define PIN_TOUCH_ANT_R         1
+#endif
+#ifndef TOUCH_BASELINE_SAMPLES
+#define TOUCH_BASELINE_SAMPLES  32
+#endif
+#ifndef TOUCH_TRIGGER_DELTA
+#define TOUCH_TRIGGER_DELTA     80
+#endif
+
 class TouchSensor {
 public:
     TouchSensor(int pinAntennaL = PIN_TOUCH_ANT_L, int pinAntennaR = PIN_TOUCH_ANT_R);

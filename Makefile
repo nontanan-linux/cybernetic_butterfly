@@ -2,7 +2,7 @@
 # ElectronicsArt — Unified Project Makefile
 # =============================================================================
 
-PYTHON = .venv/bin/python3
+PYTHON ?= python
 
 .PHONY: all help build cad pcb sync sim sim-all view clean
 

@@ -29,18 +29,23 @@
       <span class="axis-pill-z">Z: Vert. (Up)</span>
     </div>
 
-    <!-- CAD Model Selector Dropdown -->
+    <!-- CAD Model Selector Dropdown (Separated: Generated vs External) -->
     <div class="selector-group">
       <label for="model-select">CAD Model:</label>
       <select id="model-select">
-        <option value="butterfly_full_assembly.stl" selected>🦋 Full Robotic Assembly</option>
-        <option value="body.stl">🧬 Main Body Chassis (Thorax & Abdomen)</option>
-        <option value="left_wing.stl">🪽 Left Wing (Joint & JST Connector)</option>
-        <option value="right_wing.stl">🪽 Right Wing (Symmetric Mirror)</option>
-        <option value="mg90s_servo.stl">⚙️ Real MG90S Micro Servo (Metal Gear)</option>
-        <option value="mg90s_servo_horn.stl">🪓 Real MG90S Servo Horn (Single-Arm)</option>
-        <option value="base_stand.stl">🏛️ Base Stand & Battery Core</option>
-        <option value="base_stand_lid.stl">🛡️ Base Stand Bottom Lid</option>
+        <optgroup label="📦 Generated Assembly (.STL + .STEP)">
+          <option value="butterfly_full_assembly.stl" selected>🦋 Full Robotic Assembly</option>
+        </optgroup>
+        <optgroup label="🛠️ Generated 3D-Print Parts (.STL Only)">
+          <option value="body.stl">🧬 Main Body (Antennae, Thorax & 14500 Battery Bay)</option>
+          <option value="left_wing.stl">🪽 Left Butterfly Wing (3D Venation & Clevis)</option>
+          <option value="right_wing.stl">🪽 Right Butterfly Wing (Symmetric Mirror)</option>
+          <option value="butterfly_legs.stl">🦿 Biomimetic Butterfly Legs (Tucked 6-Leg Sternum)</option>
+        </optgroup>
+        <optgroup label="🔒 External Commercial CAD (Read-Only)">
+          <option value="mg90s_servo.stl">⚙️ [External] MG90S Micro Servo</option>
+          <option value="mg90s_servo_horn.stl">🪓 [External] MG90S Single-Arm Horn</option>
+        </optgroup>
       </select>
     </div>
 
@@ -60,7 +65,7 @@
   <!-- Left CAD Model Inspection Specs Card -->
   <aside id="specs-card">
     <div class="card-header">
-      <span class="card-badge" id="spec-type">CAD INSPECTION</span>
+      <span class="card-badge" id="spec-type">GENERATED ASSEMBLY (.STL & .STEP)</span>
       <h2 id="spec-name">Full Robotic Assembly</h2>
       <p class="spec-filename" id="spec-filename">butterfly_full_assembly.stl</p>
     </div>
@@ -68,22 +73,22 @@
     <div class="card-stats">
       <div class="stat-row">
         <span class="stat-label">BOUNDING SIZE</span>
-        <span class="stat-value" id="spec-dim">202 × 124 × 183 mm</span>
+        <span class="stat-value" id="spec-dim">137 × 236 × 62 mm</span>
       </div>
       <div class="stat-row">
         <span class="stat-label">TRIANGLES</span>
         <span class="stat-value" id="spec-triangles">Loading...</span>
       </div>
       <div class="stat-row">
-        <span class="stat-label">STEP CAD MODEL</span>
-        <span class="stat-value"><a id="spec-download-step" href="/models/butterfly_full_assembly.step" download>Download .STEP</a></span>
+        <span class="stat-label">CAD FORMAT</span>
+        <span class="stat-value" id="spec-step-container"><a id="spec-download-step" href="/models/butterfly_full_assembly.step" download>Download .STEP</a></span>
       </div>
     </div>
 
     <div class="card-features">
       <h3>Mechanical & Electrical Features</h3>
       <p id="spec-features">
-        Complete robotic assembly combining the anatomical body chassis, dual MG90S metal gear micro servos, nylon horns, direct-drive wing joints with 3-pin JST connectors, and base stand power core.
+        Complete robotic assembly combining the anatomical body (sweeping clubbed antennae, thorax & 14500 battery abdomen), dual external MG90S servos & horns, 3D-veined wings, and tucked 6-legged sternum.
       </p>
     </div>
 
@@ -128,12 +133,12 @@
       <!-- Kinematic Sliders -->
       <div class="control-group">
         <div class="slider-row">
-          <label>Flap Speed: <span id="val-speed">1.5 Hz</span></label>
-          <input type="range" id="slider-speed" min="0.2" max="3.5" step="0.1" value="1.5">
+          <label>Flap Speed: <span id="val-speed">1.2 Hz</span></label>
+          <input type="range" id="slider-speed" min="0.0" max="3.5" step="0.1" value="1.2">
         </div>
         <div class="slider-row">
-          <label>Flap Amplitude: <span id="val-amp">28°</span></label>
-          <input type="range" id="slider-amp" min="5" max="40" step="1" value="28">
+          <label>Flap Amplitude: <span id="val-amp">25°</span></label>
+          <input type="range" id="slider-amp" min="0" max="35" step="1" value="25">
         </div>
         <div class="slider-row">
           <label>Day / Night Ambient: <span id="val-light">Daylight</span></label>
